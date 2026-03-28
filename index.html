@@ -1675,9 +1675,12 @@
       document.getElementById('pm-name').textContent  = fullName;
       document.getElementById('pm-email').textContent = email;
 
-      // Lấy role admin từ bảng members
-      const { data: mem } = await sb.from('members').select('is_admin').eq('user_id', user.id).single();
-      const isAdmin = mem?.is_admin === true;
+      // Lấy role admin từ bảng members (không crash nếu bảng chưa tồn tại)
+      let isAdmin = false;
+      try {
+        const { data: mem } = await sb.from('members').select('is_admin').eq('user_id', user.id).single();
+        isAdmin = mem?.is_admin === true;
+      } catch(e) { console.warn('members check:', e.message); }
       if (adminTab) adminTab.style.display = isAdmin ? '' : 'none';
       document.getElementById('pm-role').innerHTML = isAdmin
         ? '<span class="tag tag-collab">⚙️ Admin</span>'
@@ -1686,11 +1689,13 @@
       // Tải điểm
       await loadUserPoints(email);
 
-      // Upsert member
-      await sb.from('members').upsert({
-        user_id: user.id, email, full_name: fullName,
-        last_login: new Date().toISOString(), is_admin: isAdmin,
-      }, { onConflict: 'user_id' }).catch(() => {});
+      // Upsert member — bọc try/catch để không crash khi bảng chưa có
+      try {
+        await sb.from('members').upsert({
+          user_id: user.id, email, full_name: fullName,
+          last_login: new Date().toISOString(), is_admin: isAdmin,
+        }, { onConflict: 'user_id' });
+      } catch(e) { console.warn('members upsert:', e.message); }
 
       if (isAdmin) await loadAdminData();
       setupRealtime();

@@ -1635,10 +1635,32 @@
   };
 
   window.doSignOut = async function() {
-    const menu = document.getElementById('profile-menu');
-    if (menu) menu.style.display = 'none';
-    await sb.auth.signOut();
-    showToast('👋 Đã đăng xuất!');
+    try {
+      // Đóng dropdown menu
+      const menu = document.getElementById('profile-menu');
+      if (menu) menu.style.display = 'none';
+
+      // Reset UI ngay lập tức — không chờ onAuthStateChange
+      currentUser = null;
+      document.getElementById('user-badge').classList.remove('show');
+      document.getElementById('btn-login').style.display  = '';
+      document.getElementById('btn-signup').style.display = '';
+      const adminTab = document.getElementById('admin-tab');
+      const ownerTab = document.getElementById('owner-tab');
+      if (adminTab) adminTab.style.display = 'none';
+      if (ownerTab) ownerTab.style.display = 'none';
+      if (typeof resetPointsUI === 'function') resetPointsUI();
+      showPage('home');
+
+      // Gọi Supabase signOut (bất đồng bộ, không chặn UI)
+      await sb.auth.signOut({ scope: 'local' });
+      showToast('👋 Đã đăng xuất!');
+
+    } catch(e) {
+      console.error('Lỗi đăng xuất:', e);
+      // Fallback — reload trang để đảm bảo đăng xuất
+      location.reload();
+    }
   };
 
   // Modal đặt lại mật khẩu (khi click link từ email)

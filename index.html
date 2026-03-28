@@ -1701,10 +1701,19 @@
       // Lấy role admin từ bảng members (không crash nếu bảng chưa tồn tại)
       let isAdmin = false;
       try {
-        const { data: mem } = await sb.from('members').select('is_admin').eq('user_id', user.id).single();
+        const { data: mem, error: memErr } = await sb.from('members')
+          .select('is_admin, email').eq('user_id', user.id).single();
+        console.log('[HanoiLens] members query:', { mem, memErr, userId: user.id });
         isAdmin = mem?.is_admin === true;
-      } catch(e) { console.warn('members check:', e.message); }
-      if (adminTab) adminTab.style.display = isAdmin ? '' : 'none';
+        console.log('[HanoiLens] isAdmin:', isAdmin);
+      } catch(e) { console.warn('[HanoiLens] members check error:', e.message); }
+      
+      if (adminTab) {
+        adminTab.style.display = isAdmin ? '' : 'none';
+        console.log('[HanoiLens] adminTab display:', adminTab.style.display);
+      } else {
+        console.warn('[HanoiLens] adminTab element not found!');
+      }
       document.getElementById('pm-role').innerHTML = isAdmin
         ? '<span class="tag tag-collab">⚙️ Admin</span>'
         : '<span class="tag tag-avail">● Thành viên</span>';

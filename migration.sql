@@ -144,10 +144,13 @@ insert into storage.buckets (id, name, public)
 values ('hanoilens-images', 'hanoilens-images', true)
 on conflict (id) do nothing;
 
-create policy if not exists "public read images"
+drop policy if exists "public read images" on storage.objects;
+drop policy if exists "auth upload images" on storage.objects;
+
+create policy "public read images"
   on storage.objects for select to anon
   using (bucket_id = 'hanoilens-images');
 
-create policy if not exists "auth upload images"
+create policy "auth upload images"
   on storage.objects for insert to anon
   with check (bucket_id = 'hanoilens-images');

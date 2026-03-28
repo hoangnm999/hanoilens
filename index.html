@@ -1712,12 +1712,12 @@
       // Tải điểm
       await loadUserPoints(email);
 
-      // Upsert member — bọc try/catch để không crash khi bảng chưa có
+      // Upsert member — KHÔNG ghi đè is_admin (để admin set qua bảng)
       try {
         await sb.from('members').upsert({
           user_id: user.id, email, full_name: fullName,
-          last_login: new Date().toISOString(), is_admin: isAdmin,
-        }, { onConflict: 'user_id' });
+          last_login: new Date().toISOString(),
+        }, { onConflict: 'user_id', ignoreDuplicates: false });
       } catch(e) { console.warn('members upsert:', e.message); }
 
       if (isAdmin) await loadAdminData();

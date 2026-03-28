@@ -1617,6 +1617,7 @@
           : 'Lỗi: ' + error.message;
         errEl.style.display = 'block'; return;
       }
+      showToast('✅ Đăng nhập thành công!');
       closeAuthModal();
     }
   };
@@ -2510,12 +2511,12 @@
   /* ══════════════════════════════════════════════
      TOAST NOTIFICATION
   ══════════════════════════════════════════════ */
-  function showToast(msg) {
+  window.showToast = function showToast(msg) {
     const t = document.createElement('div');
-    t.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:999;background:var(--card);border:1px solid var(--gold);border-radius:10px;padding:12px 20px;font-size:13px;color:var(--white);box-shadow:0 4px 20px rgba(0,0,0,0.5);animation:fadeIn .3s ease`;
+    t.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--card);border:1px solid var(--gold);border-radius:10px;padding:12px 20px;font-size:13px;color:var(--white);box-shadow:0 4px 20px rgba(0,0,0,0.5);animation:fadeIn .3s ease`;
     t.textContent = msg;
     document.body.appendChild(t);
-    setTimeout(() => t.remove(), 4000);
+    setTimeout(() => t.remove(), 3500);
   }
 
   /* ══════════════════════════════════════════════

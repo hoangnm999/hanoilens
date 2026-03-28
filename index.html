@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HanoiLens – Nền tảng cho thuê thiết bị quay phim</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -580,6 +579,79 @@
 <body>
 
 
+<!-- AUTH MODAL -->
+<div id="auth-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center">
+  <div class="auth-box" style="position:relative;width:360px;max-width:92vw">
+    <button onclick="closeAuthModal()" style="position:absolute;top:12px;right:14px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1">✕</button>
+
+    <!-- Tabs -->
+    <div style="display:flex;background:var(--surface);border-radius:10px;padding:4px;margin-bottom:22px">
+      <button id="atab-login" onclick="switchAuthTab('login')"
+        style="flex:1;padding:8px;border-radius:7px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;background:var(--gold);color:var(--black);transition:all .2s">
+        Đăng nhập
+      </button>
+      <button id="atab-signup" onclick="switchAuthTab('signup')"
+        style="flex:1;padding:8px;border-radius:7px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);transition:all .2s">
+        Đăng ký
+      </button>
+    </div>
+
+    <div class="auth-logo" style="margin-bottom:4px">HANOI<span>LENS</span></div>
+    <div id="auth-subtitle" class="auth-tagline">Chào mừng trở lại!</div>
+
+    <div id="auth-err" style="display:none;background:rgba(224,92,92,0.12);border:1px solid rgba(224,92,92,0.3);border-radius:8px;padding:10px 12px;margin:12px 0;font-size:13px;color:var(--red)"></div>
+    <div id="auth-suc" style="display:none;background:rgba(76,175,125,0.12);border:1px solid rgba(76,175,125,0.3);border-radius:8px;padding:10px 12px;margin:12px 0;font-size:13px;color:var(--green)"></div>
+
+    <!-- Họ tên (chỉ đăng ký) -->
+    <div id="auth-name-wrap" style="display:none;margin-bottom:12px;text-align:left">
+      <label class="form-label">HỌ TÊN</label>
+      <input class="form-input" id="auth-fullname" placeholder="Nguyễn Văn A" style="width:100%" onkeydown="if(event.key==='Enter')doAuth()">
+    </div>
+
+    <!-- Email -->
+    <div style="margin-bottom:12px;text-align:left">
+      <label class="form-label">EMAIL</label>
+      <input class="form-input" id="auth-email" type="email" placeholder="example@gmail.com" style="width:100%" onkeydown="if(event.key==='Enter')doAuth()">
+    </div>
+
+    <!-- Password -->
+    <div style="margin-bottom:4px;text-align:left;position:relative">
+      <label class="form-label">MẬT KHẨU</label>
+      <input class="form-input" id="auth-pwd" type="password" placeholder="••••••••" style="width:100%;padding-right:42px" onkeydown="if(event.key==='Enter')doAuth()">
+      <button onclick="document.getElementById('auth-pwd').type=document.getElementById('auth-pwd').type==='password'?'text':'password'"
+        style="position:absolute;right:10px;top:28px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px">👁</button>
+    </div>
+
+    <!-- Quên mật khẩu -->
+    <div id="auth-forgot-wrap" style="text-align:right;margin-bottom:10px">
+      <button onclick="switchAuthTab('forgot')" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif">Quên mật khẩu?</button>
+    </div>
+
+    <!-- Xác nhận mật khẩu (chỉ đăng ký) -->
+    <div id="auth-confirm-wrap" style="display:none;margin-bottom:12px;text-align:left">
+      <label class="form-label">XÁC NHẬN MẬT KHẨU</label>
+      <input class="form-input" id="auth-confirm" type="password" placeholder="••••••••" style="width:100%" onkeydown="if(event.key==='Enter')doAuth()">
+    </div>
+
+    <!-- Form quên mật khẩu -->
+    <div id="auth-reset-wrap" style="display:none">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Nhập email để nhận link đặt lại mật khẩu.</p>
+      <div style="margin-bottom:14px;text-align:left">
+        <label class="form-label">EMAIL</label>
+        <input class="form-input" id="auth-reset-email" type="email" placeholder="example@gmail.com" style="width:100%">
+      </div>
+      <button class="auth-btn-main" onclick="doForgotPassword()">Gửi link đặt lại</button>
+      <button onclick="switchAuthTab('login')" style="width:100%;margin-top:8px;background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">← Quay lại đăng nhập</button>
+    </div>
+
+    <button class="auth-btn-main" id="auth-btn" onclick="doAuth()" style="margin-top:4px">Đăng nhập</button>
+
+    <p style="margin-top:14px;font-size:11px;color:var(--muted);text-align:center;line-height:1.6">
+      Bằng cách đăng ký, bạn đồng ý với điều khoản sử dụng của HanoiLens
+    </p>
+  </div>
+</div>
+
 <!-- NAVBAR -->
 <nav>
   <a class="nav-logo" href="#" onclick="showPage('home')">HANOI<span>LENS</span></a>
@@ -591,8 +663,8 @@
     <button class="nav-tab" onclick="showPage('admin')" id="admin-tab" style="display:none">⚙️ Admin</button>
   </div>
   <div class="nav-right">
-    <button class="btn-outline" id="btn-login" onclick="netlifyIdentity.open('login')">Đăng nhập</button>
-    <button class="btn-gold" id="btn-signup" onclick="netlifyIdentity.open('signup')">Đăng ký</button>
+    <button class="btn-outline" id="btn-login" onclick="openAuthModal('login')">Đăng nhập</button>
+    <button class="btn-gold" id="btn-signup" onclick="openAuthModal('signup')">Đăng ký</button>
     <div class="user-badge" id="user-badge" style="position:relative;cursor:pointer" onclick="toggleProfileMenu()">
       <div class="user-avatar" id="user-avatar">?</div>
       <span class="user-email" id="user-email">...</span>
@@ -608,7 +680,7 @@
           <button onclick="event.stopPropagation();showPage('owner');toggleProfileMenu()" style="width:100%;text-align:left;padding:9px 12px;background:none;border:none;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;border-radius:6px" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='none'">📦 Thiết bị của tôi</button>
           <button onclick="event.stopPropagation();openChangePasswordModal();toggleProfileMenu()" style="width:100%;text-align:left;padding:9px 12px;background:none;border:none;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;border-radius:6px" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='none'">🔐 Đổi mật khẩu</button>
           <div style="height:1px;background:var(--border);margin:4px 0"></div>
-          <button onclick="event.stopPropagation();netlifyIdentity.logout()" style="width:100%;text-align:left;padding:9px 12px;background:none;border:none;color:var(--red);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;border-radius:6px;font-weight:500" onmouseover="this.style.background='rgba(224,92,92,0.1)'" onmouseout="this.style.background='none'">↩ Đăng xuất</button>
+          <button onclick="event.stopPropagation();doSignOut()" style="width:100%;text-align:left;padding:9px 12px;background:none;border:none;color:var(--red);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;border-radius:6px;font-weight:500" onmouseover="this.style.background='rgba(224,92,92,0.1)'" onmouseout="this.style.background='none'">↩ Đăng xuất</button>
         </div>
       </div>
     </div>
@@ -1440,9 +1512,144 @@
   /* ══════════════════════════════════════════════
      NETLIFY IDENTITY AUTH
   ══════════════════════════════════════════════ */
-  netlifyIdentity.on('init',   user => handleAuth(user));
-  netlifyIdentity.on('login',  user => { handleAuth(user); netlifyIdentity.close(); });
-  netlifyIdentity.on('logout', ()   => handleAuth(null));
+  /* ══════════════════════════════════════════════
+     SUPABASE AUTH — EMAIL + PASSWORD
+  ══════════════════════════════════════════════ */
+
+  // Kiểm tra session khi tải trang
+  (async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.user) await handleAuth(session.user);
+  })();
+
+  // Lắng nghe thay đổi trạng thái auth
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN')        await handleAuth(session.user);
+    if (event === 'SIGNED_OUT')       await handleAuth(null);
+    if (event === 'PASSWORD_RECOVERY') openResetPasswordModal();
+  });
+
+  /* ── Modal auth ── */
+  let _authMode = 'login';
+
+  window.openAuthModal = function(mode = 'login') {
+    switchAuthTab(mode);
+    document.getElementById('auth-modal').style.display = 'flex';
+    setTimeout(() => document.getElementById('auth-email')?.focus(), 100);
+  };
+
+  window.closeAuthModal = function() {
+    document.getElementById('auth-modal').style.display = 'none';
+    document.getElementById('auth-err').style.display = 'none';
+    document.getElementById('auth-suc').style.display = 'none';
+    ['auth-email','auth-pwd','auth-fullname','auth-confirm'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+  };
+
+  window.switchAuthTab = function(mode) {
+    _authMode = mode;
+    const isLogin  = mode === 'login';
+    const isSignup = mode === 'signup';
+    const isForgot = mode === 'forgot';
+
+    // Tab styles
+    const tl = document.getElementById('atab-login');
+    const ts = document.getElementById('atab-signup');
+    if (tl) { tl.style.background = isLogin ? 'var(--gold)' : 'transparent'; tl.style.color = isLogin ? 'var(--black)' : 'var(--muted)'; }
+    if (ts) { ts.style.background = isSignup ? 'var(--gold)' : 'transparent'; ts.style.color = isSignup ? 'var(--black)' : 'var(--muted)'; }
+
+    const sub = document.getElementById('auth-subtitle');
+    if (sub) sub.textContent = isLogin ? 'Chào mừng trở lại!' : isSignup ? 'Tạo tài khoản mới' : 'Đặt lại mật khẩu';
+
+    document.getElementById('auth-name-wrap').style.display    = isSignup ? 'block' : 'none';
+    document.getElementById('auth-confirm-wrap').style.display = isSignup ? 'block' : 'none';
+    document.getElementById('auth-forgot-wrap').style.display  = isLogin  ? 'block' : 'none';
+    document.getElementById('auth-reset-wrap').style.display   = isForgot ? 'block' : 'none';
+    document.getElementById('auth-btn').style.display          = isForgot ? 'none'  : 'block';
+    document.getElementById('auth-btn').textContent            = isLogin  ? 'Đăng nhập' : 'Tạo tài khoản';
+
+    // Ẩn/hiện email + password khi ở màn reset
+    ['auth-email','auth-pwd'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.closest('div').style.display = isForgot ? 'none' : 'block';
+    });
+
+    document.getElementById('auth-err').style.display = 'none';
+    document.getElementById('auth-suc').style.display = 'none';
+  };
+
+  window.doAuth = async function() {
+    const emailVal  = document.getElementById('auth-email').value.trim();
+    const pwdVal    = document.getElementById('auth-pwd').value;
+    const nameVal   = document.getElementById('auth-fullname')?.value.trim() || '';
+    const confirmVal= document.getElementById('auth-confirm')?.value || '';
+    const errEl     = document.getElementById('auth-err');
+    const sucEl     = document.getElementById('auth-suc');
+
+    errEl.style.display = 'none';
+    sucEl.style.display = 'none';
+
+    if (!emailVal || !emailVal.includes('@')) { errEl.textContent = 'Email không hợp lệ!'; errEl.style.display = 'block'; return; }
+    if (!pwdVal) { errEl.textContent = 'Vui lòng nhập mật khẩu!'; errEl.style.display = 'block'; return; }
+
+    const btn = document.getElementById('auth-btn');
+    btn.textContent = '⏳ Đang xử lý...'; btn.disabled = true;
+
+    if (_authMode === 'signup') {
+      if (pwdVal.length < 6) { errEl.textContent = 'Mật khẩu ít nhất 6 ký tự!'; errEl.style.display = 'block'; btn.textContent = 'Tạo tài khoản'; btn.disabled = false; return; }
+      if (pwdVal !== confirmVal) { errEl.textContent = 'Mật khẩu xác nhận không khớp!'; errEl.style.display = 'block'; btn.textContent = 'Tạo tài khoản'; btn.disabled = false; return; }
+
+      const { error } = await sb.auth.signUp({
+        email: emailVal, password: pwdVal,
+        options: { data: { full_name: nameVal || emailVal.split('@')[0] } }
+      });
+      btn.textContent = 'Tạo tài khoản'; btn.disabled = false;
+      if (error) { errEl.textContent = error.message.includes('already') ? 'Email này đã được đăng ký!' : 'Lỗi: ' + error.message; errEl.style.display = 'block'; return; }
+      sucEl.textContent = '✅ Đăng ký thành công! Kiểm tra email để xác nhận (nếu cần).'; sucEl.style.display = 'block';
+
+    } else {
+      const { error } = await sb.auth.signInWithPassword({ email: emailVal, password: pwdVal });
+      btn.textContent = 'Đăng nhập'; btn.disabled = false;
+      if (error) {
+        errEl.textContent = error.message.includes('Invalid') ? 'Email hoặc mật khẩu không đúng!'
+          : error.message.includes('confirmed') ? 'Email chưa xác nhận! Kiểm tra hộp thư.'
+          : 'Lỗi: ' + error.message;
+        errEl.style.display = 'block'; return;
+      }
+      closeAuthModal();
+    }
+  };
+
+  window.doForgotPassword = async function() {
+    const emailVal = document.getElementById('auth-reset-email').value.trim();
+    const errEl = document.getElementById('auth-err');
+    const sucEl = document.getElementById('auth-suc');
+    if (!emailVal) { errEl.textContent = 'Vui lòng nhập email!'; errEl.style.display = 'block'; return; }
+
+    const { error } = await sb.auth.resetPasswordForEmail(emailVal, {
+      redirectTo: window.location.origin + '/?reset=true',
+    });
+    if (error) { errEl.textContent = 'Lỗi: ' + error.message; errEl.style.display = 'block'; return; }
+    sucEl.textContent = '📧 Đã gửi! Kiểm tra hộp thư để đặt lại mật khẩu.'; sucEl.style.display = 'block';
+  };
+
+  window.doSignOut = async function() {
+    const menu = document.getElementById('profile-menu');
+    if (menu) menu.style.display = 'none';
+    await sb.auth.signOut();
+    showToast('👋 Đã đăng xuất!');
+  };
+
+  // Modal đặt lại mật khẩu (khi click link từ email)
+  function openResetPasswordModal() {
+    const pwd = prompt('Nhập mật khẩu mới (tối thiểu 6 ký tự):');
+    if (!pwd || pwd.length < 6) { alert('Mật khẩu phải ít nhất 6 ký tự!'); return; }
+    sb.auth.updateUser({ password: pwd }).then(({ error }) => {
+      if (error) alert('Lỗi: ' + error.message);
+      else { alert('✅ Đã đặt lại mật khẩu thành công!'); showToast('🔐 Mật khẩu đã cập nhật!'); }
+    });
+  }
 
   async function handleAuth(user) {
     currentUser = user;
@@ -1456,41 +1663,33 @@
       badge.classList.add('show');
       btnLogin.style.display  = 'none';
       btnSignup.style.display = 'none';
-      ownerTab.style.display  = '';
+      if (ownerTab) ownerTab.style.display = '';
 
+      const meta     = user.user_metadata || {};
+      const fullName = meta.full_name || user.email.split('@')[0];
       const email    = user.email || '';
-      const fullName = (user.user_metadata && user.user_metadata.full_name)
-        ? user.user_metadata.full_name
-        : email.split('@')[0];
 
-      // Navbar & greeting
       document.getElementById('user-email').textContent   = email;
       document.getElementById('user-avatar').textContent  = fullName.charAt(0).toUpperCase();
       document.getElementById('user-greeting').textContent= 'CHÀO, ' + fullName.toUpperCase() + ' 👋';
-
-      // Profile menu
       document.getElementById('pm-name').textContent  = fullName;
       document.getElementById('pm-email').textContent = email;
 
-      // Kiểm tra role admin từ Netlify Identity
-      const roles   = (user.app_metadata && user.app_metadata.roles) || [];
-      const isAdmin = Array.isArray(roles) ? roles.includes('admin') : roles === 'admin';
-      adminTab.style.display = isAdmin ? '' : 'none';
-
+      // Lấy role admin từ bảng members
+      const { data: mem } = await sb.from('members').select('is_admin').eq('user_id', user.id).single();
+      const isAdmin = mem?.is_admin === true;
+      if (adminTab) adminTab.style.display = isAdmin ? '' : 'none';
       document.getElementById('pm-role').innerHTML = isAdmin
         ? '<span class="tag tag-collab">⚙️ Admin</span>'
         : '<span class="tag tag-avail">● Thành viên</span>';
 
-      // Tải điểm (dùng email làm key)
+      // Tải điểm
       await loadUserPoints(email);
 
-      // Ghi nhận thành viên vào Supabase
+      // Upsert member
       await sb.from('members').upsert({
-        user_id:    user.id,
-        email,
-        full_name:  fullName,
-        is_admin:   isAdmin,
-        last_login: new Date().toISOString(),
+        user_id: user.id, email, full_name: fullName,
+        last_login: new Date().toISOString(), is_admin: isAdmin,
       }, { onConflict: 'user_id' }).catch(() => {});
 
       if (isAdmin) await loadAdminData();
@@ -2366,7 +2565,7 @@
 
   async function submitBooking() {
     if (!currentUser) {
-      netlifyIdentity.open('login');
+      openAuthModal('login');
       return;
     }
     if (!_currentListingId) {

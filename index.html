@@ -1712,13 +1712,26 @@
       // Tải điểm
       await loadUserPoints(email);
 
-      // Upsert member — KHÔNG ghi đè is_admin (để admin set qua bảng)
+      // Upsert member — chỉ update last_login và full_name, KHÔNG đụng is_admin
       try {
-        await sb.from('members').upsert({
-          user_id: user.id, email, full_name: fullName,
-          last_login: new Date().toISOString(),
-        }, { onConflict: 'user_id', ignoreDuplicates: false });
-      } catch(e) { console.warn('members upsert:', e.message); }
+        const { data: existing } = await sb.from('members')
+          .select('id').eq('user_id', user.id).single();
+
+        if (existing) {
+          // Đã có record → chỉ update last_login + full_name
+          await sb.from('members').update({
+            full_name: fullName,
+            last_login: new Date().toISOString(),
+          }).eq('user_id', user.id);
+        } else {
+          // Chưa có → insert mới với is_admin = false (mặc định)
+          await sb.from('members').insert({
+            user_id: user.id, email, full_name: fullName,
+            is_admin: false,
+            last_login: new Date().toISOString(),
+          });
+        }
+      } catch(e) { console.warn('members sync:', e.message); }
 
       if (isAdmin) await loadAdminData();
       setupRealtime();

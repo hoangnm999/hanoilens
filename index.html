@@ -1508,7 +1508,7 @@
   const SUPABASE_URL = 'https://qfurlsarqaenpzbgkfyk.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmdXJsc2FycWFlbnB6YmdrZnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4NDYyMzEsImV4cCI6MjA5MzQyMjIzMX0.v_3YUmxRYiT1eLyEIPfaBys5CBDE8z-2Ytzb5CwjXBU';
   
-  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   let currentUser = null;
   window.currentUser = null;
 

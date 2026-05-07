@@ -30,7 +30,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'HanoiLens <noreply@hanoilens.com>',  // Thay bằng domain đã verify trên Resend
+        from: 'HanoiLens <onboarding@resend.dev>',  // Thay bằng domain đã verify trên Resend
         to: [to],
         subject,
         html,

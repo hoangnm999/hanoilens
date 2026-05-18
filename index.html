@@ -3018,6 +3018,7 @@ async function loadAdminStats() {
         + '<button class="btn-wishlist">\u2661</button>'
         + '</div>'
         + '<label class="compare-cb-wrap"><input type="checkbox" id="cmp-' + r.id + '" onchange="toggleCompare(\'' + r.id + '\',this.checked)"> So sánh</label>'
+        + '</div>'
     }).join('');
     // Load badges bất đồng bộ (không block render)
     filtered.forEach(function(r) {
@@ -3758,8 +3759,13 @@ async function loadAdminStats() {
       if (eqList.length === 0) {
         sel.innerHTML = '<option value="">Chưa có thiết bị nào</option>';
       } else {
+        var seen = new Set();
+        var uniqueList = eqList.filter(function(e) {
+          if (seen.has(e.name)) return false;
+          seen.add(e.name); return true;
+        });
         sel.innerHTML = '<option value="">-- Chọn thiết bị --</option>'
-          + eqList.map(function(e) { return '<option value="' + e.name + '">' + e.name + '</option>'; }).join('');
+          + uniqueList.map(function(e) { return '<option value="' + e.name + '">' + e.name + '</option>'; }).join('');
       }
     }
   }

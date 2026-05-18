@@ -2820,30 +2820,42 @@ async function loadAdminStats() {
   }
 
   async function uploadEqImage(file) {
-    if (file.size > 2 * 1024 * 1024) { alert('Ảnh phải nhỏ hơn 2MB!'); return; }
+    if (file.size > 2 * 1024 * 1024) { showToast('Ảnh phải nhỏ hơn 2MB!', 'error'); return; }
+
+    const allowed = ['jpg','jpeg','png','gif','webp'];
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!allowed.includes(ext)) { showToast('Định dạng không hợp lệ. Chỉ chấp nhận JPG, PNG, GIF, WEBP.', 'error'); return; }
 
     const preview = document.getElementById('eq-dropzone-preview');
     preview.innerHTML = '<div style="font-size:13px;color:var(--muted)">⏳ Đang tải ảnh lên...</div>';
 
-    const ext = file.name.split('.').pop();
-    const filename = `equipment/${Date.now()}.${ext}`;
+    const filename = 'equipment/' + Date.now() + '.' + ext;
 
-    const { data, error } = await sb.storage
-      .from('hanoilens-images')
-      .upload(filename, file, { upsert: true });
+    try {
+      const res = await fetch(SUPABASE_URL + '/storage/v1/object/hanoilens-images/' + filename, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + (_getToken() || SUPABASE_ANON_KEY),
+          'apikey': SUPABASE_ANON_KEY,
+          'x-upsert': 'true',
+          'Content-Type': file.type || 'image/jpeg'
+        },
+        body: file
+      });
 
-    if (error) {
-      preview.innerHTML = `<div style="font-size:13px;color:var(--red)">❌ Lỗi upload: ${error.message}</div>`;
-      return;
+      if (!res.ok) {
+        const errText = await res.text();
+        preview.innerHTML = '<div style="font-size:13px;color:var(--red)">❌ Lỗi upload: ' + (errText || res.status) + '</div>';
+        return;
+      }
+
+      const publicUrl = SUPABASE_URL + '/storage/v1/object/public/hanoilens-images/' + filename;
+      document.getElementById('eq-image-url').value = publicUrl;
+      preview.innerHTML = '<img src="' + publicUrl + '" style="height:80px;border-radius:6px;object-fit:cover;margin-bottom:6px"><br>'
+        + '<span style="font-size:11px;color:var(--green)">✓ Tải lên thành công</span>';
+    } catch(e) {
+      preview.innerHTML = '<div style="font-size:13px;color:var(--red)">❌ Lỗi kết nối: ' + e.message + '</div>';
     }
-
-    const { data: urlData } = sb.storage.from('hanoilens-images').getPublicUrl(filename);
-    const publicUrl = urlData.publicUrl;
-
-    document.getElementById('eq-image-url').value = publicUrl;
-    preview.innerHTML = `
-      <img src="${publicUrl}" style="height:80px;border-radius:6px;object-fit:cover;margin-bottom:6px"><br>
-      <span style="font-size:11px;color:var(--green)">✓ Tải lên thành công</span>`;
   }
 
   /* ── CẬP NHẬT DROPDOWN THIẾT BỊ TRONG FORM YÊU CẦU ĐIỂM ── */
@@ -2960,7 +2972,6 @@ async function loadAdminStats() {
         + '<button class="btn-wishlist">\u2661</button>'
         + '</div>'
         + '<label class="compare-cb-wrap"><input type="checkbox" id="cmp-' + r.id + '" onchange="toggleCompare(\'' + r.id + '\',this.checked)"> So sánh</label>'
-        + '</div>'
     }).join('');
     // Load badges bất đồng bộ (không block render)
     filtered.forEach(function(r) {
@@ -3701,13 +3712,8 @@ async function loadAdminStats() {
       if (eqList.length === 0) {
         sel.innerHTML = '<option value="">Chưa có thiết bị nào</option>';
       } else {
-        var seen = new Set();
-        var uniqueList = eqList.filter(function(e) {
-          if (seen.has(e.name)) return false;
-          seen.add(e.name); return true;
-        });
         sel.innerHTML = '<option value="">-- Chọn thiết bị --</option>'
-          + uniqueList.map(function(e) { return '<option value="' + e.name + '">' + e.name + '</option>'; }).join('');
+          + eqList.map(function(e) { return '<option value="' + e.name + '">' + e.name + '</option>'; }).join('');
       }
     }
   }

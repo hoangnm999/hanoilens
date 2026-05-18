@@ -1465,12 +1465,13 @@
           <button class="btn-sm gold" onclick="saveEquipment()">💾 Lưu thiết bị</button>
         </div>
       </div>
-      <div class="section-head" style="margin-bottom:16px">
+      <div class="section-head" style="margin-bottom:12px">
         <div>
           <div class="section-title" style="font-size:20px">DANH SÁCH THIẾT BỊ</div>
           <div class="section-subtitle" id="eq-count">Đang tải...</div>
         </div>
       </div>
+      <div id="eq-cat-filter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px"></div>
       <div class="grid-3" id="eq-grid">
         <div class="empty-state"><div class="empty-state-icon">⚙️</div><div>Chưa có thiết bị nào</div></div>
       </div>
@@ -2679,19 +2680,60 @@ async function loadAdminStats() {
     );
     log('Equipment result:', { count: data?.length, eqErr });
     const grid = document.getElementById('eq-grid');
-    const count = document.getElementById('eq-count');
     if (!grid) return;
 
     if (!data || data.length === 0) {
       grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚙️</div><div>Chưa có thiết bị nào — thêm thiết bị ở form bên trên</div></div>';
-      if (count) count.textContent = '0 thiết bị';
+      var cnt = document.getElementById('eq-count');
+      if (cnt) cnt.textContent = '0 thiết bị';
+      var fb = document.getElementById('eq-cat-filter');
+      if (fb) fb.innerHTML = '';
       return;
     }
 
-    if (count) count.textContent = `${data.length} thiết bị`;
+    _eqAllData = data;
+    _eqCatFilter = '';
+    _renderEqCatFilter();
+    _renderEqGrid();
+  }
 
-    const catIcons = { 'Máy quay':'🎥','Ống kính':'🔭','Gimbal / Stabilizer':'🎬','Lighting':'💡','Âm thanh':'🎙','Phụ kiện khác':'🔧' };
+  function _renderEqCatFilter() {
+    var filterBar = document.getElementById('eq-cat-filter');
+    if (!filterBar) return;
+    var cats = ['Máy quay', 'Ống kính', 'Gimbal / Stabilizer', 'Lighting', 'Âm thanh', 'Phụ kiện khác'];
+    var counts = {};
+    _eqAllData.forEach(function(eq) { counts[eq.category] = (counts[eq.category] || 0) + 1; });
+    var total = _eqAllData.length;
+    var btns = '<button class="admin-tab' + (_eqCatFilter === '' ? ' active' : '') + '" onclick="filterEqCat(this,\'\')">' + 'Tất cả (' + total + ')</button>';
+    cats.forEach(function(cat) {
+      var n = counts[cat] || 0;
+      if (n === 0) return;
+      btns += '<button class="admin-tab' + (_eqCatFilter === cat ? ' active' : '') + '" onclick="filterEqCat(this,\'' + cat + '\')">' + cat + ' (' + n + ')</button>';
+    });
+    filterBar.innerHTML = btns;
+  }
 
+  window.filterEqCat = function filterEqCat(btn, cat) {
+    _eqCatFilter = cat;
+    var bar = document.getElementById('eq-cat-filter');
+    if (bar) bar.querySelectorAll('.admin-tab').forEach(function(b) { b.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+    _renderEqGrid();
+  };
+
+  function _renderEqGrid() {
+    var grid = document.getElementById('eq-grid');
+    var count = document.getElementById('eq-count');
+    if (!grid) return;
+    var data = _eqCatFilter
+      ? _eqAllData.filter(function(eq) { return eq.category === _eqCatFilter; })
+      : _eqAllData;
+    if (count) count.textContent = data.length + ' thiết bị' + (_eqCatFilter ? ' trong "' + _eqCatFilter + '"' : ' (tất cả)');
+    if (data.length === 0) {
+      grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div><div>Không có thiết bị nào trong danh mục này</div></div>';
+      return;
+    }
+    var catIcons = { 'Máy quay': '🎥', 'Ống kính': '🔭', 'Gimbal / Stabilizer': '🎬', 'Lighting': '💡', 'Âm thanh': '🎙', 'Phụ kiện khác': '🔧' };
     grid.innerHTML = data.map(eq => `
       <div class="eq-card">
         <div class="eq-card-img">
@@ -2911,6 +2953,10 @@ async function loadAdminStats() {
   var _allListingsCache = [];
   var _currentCategoryFilter = '';
   var _currentSearchFilter = '';
+
+  /* Admin Equipment filter state */
+  var _eqAllData = [];
+  var _eqCatFilter = '';
 
   window.filterListings = function filterListings(btn, category, search) {
     if (btn !== null) {
